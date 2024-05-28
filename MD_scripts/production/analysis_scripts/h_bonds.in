@@ -1,0 +1,15 @@
+#!/bin/bash/
+
+#Read in topology file
+parm com_Dry.*.parm7
+
+#Read in trajectory
+trajin com_Dry.nc 1 last 1
+
+#Avergae hbond contacts between protein and ligand
+hbond h_contacts :1-401 avgout avg_hbonds.dat series uuseries h_bond_raw.dat nointramol
+go
+
+#Length of time hbond contacts exist
+lifetime h_contacts[solutehb] out hbond_lifetime.dat
+go

@@ -1,0 +1,35 @@
+#!/bin/bash
+#PBS -P CBBI1154
+#PBS -N pre-prep
+#PBS -l select=1:ncpus=24:mpiprocs=24
+#PBS -l walltime=1:00:00
+#PBS -q smp
+#PBS -m be
+#PBS -M lzondagh@uwc.ac.za
+#PBS -r n
+#PBS -o /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction/3_9_MD_output
+#PBS -e /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction/3_9_MD_error
+#PBS
+
+module purge
+module add chpc/amber/20/mpich-3.4.1/gcc-6.1.0
+source $AMBERHOME/amber.sh
+
+pushd /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction/
+exe=$AMBERHOME/bin/pmemd.MPI
+
+mpirun -np 24 $exe -O -i 3_min_solute_restrnt_MD.in -o 3_min_solute_restrnt_MD.out -p ../complex_solvated.parm7 -c 2_equilibration_10K_MD.rst7 -r 3_min_solute_restrnt_MD.rst7 -ref 2_equilibration_10K_MD.rst7 -inf ../MD_info/3_min_MD.info 
+
+mpirun -np 24 $exe -O -i 4_min.in -o 4_min.out -p ../complex_solvated.parm7 -c 3_min_solute_restrnt_MD.rst7 -r 4_min.rst7 -ref 3_min_solute_restrnt_MD.rst7 -inf ../MD_info/4_min_MD.info
+
+mpirun -np 24 $exe -O -i 5_min.in -o 5_min.out -p ../complex_solvated.parm7 -c 4_min.rst7 -r 5_min.rst7 -ref 4_min.rst7 -inf ../MD_info/5_min_MD.info 
+
+mpirun -np 24 $exe -O -i 6_min.in -o 6_min.out -p ../complex_solvated.parm7 -c 5_min.rst7 -r 6_min.rst7 -ref 5_min.rst7 -inf ../MD_info/6_min_MD.info 
+
+mpirun -np 24 $exe -O -i 7_min.in -o 7_min.out -p ../complex_solvated.parm7 -c 6_min.rst7 -r 7_min.rst7 -ref 6_min.rst7 -inf ../MD_info/7_min_MD.info
+
+mpirun -np 24 $exe -O -i 8_min.in -o 8_min.out -p ../complex_solvated.parm7 -c 7_min.rst7 -r 8_min.rst7 -ref 7_min.rst7 -inf ../MD_info/8_min_MD.info
+
+mpirun -np 24 $exe -O -i 9_min.in -o 9_min.out -p ../complex_solvated.parm7 -c 8_min.rst7 -r 9_min.rst7 -ref 8_min.rst7 -inf ../MD_info/9_min_MD.info 
+
+popd

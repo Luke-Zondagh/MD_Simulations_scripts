@@ -1,0 +1,31 @@
+#!/bin/bash
+
+#Read in topology file
+parm ../../complex_solvated.parm7
+
+#Read in trajectories
+#trajin ../*_trj_*.nc 1 last 1 #first to last frame and read every frame 
+trajin ../*_trj_r1.nc 1 last 1
+trajin ../*_trj_r2.nc 1 last 1
+trajin ../*_trj_r3.nc 1 last 1
+trajin ../*_trj_r4.nc 1 last 1
+trajin ../*_trj_r5.nc 1 last 1
+trajin ../*_trj_r6.nc 1 last 1
+trajin ../*_trj_r7.nc 1 last 1
+trajin ../*_trj_r8.nc 1 last 1
+trajin ../*_trj_r9.nc 1 last 1
+trajin ../*_trj_r_10.nc 1 last 1
+
+#Centers molecular systems of all trajectories
+autoimage
+
+#strip solvents and ions from trajectory file
+strip :WAT,Na+,Cl- outprefix com_Dry.parm7 
+
+#remove global rotational and translation motion
+rms fit :1-401
+
+#write out combined and stripped trajectory file 
+trajout com_Dry.nc nobox
+
+go

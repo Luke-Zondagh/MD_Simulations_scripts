@@ -1,0 +1,22 @@
+Look at tutorial 3.1 in Amber-Tutorial website. https://ambermd.org/tutorials/basic/tutorial13/index.php#Minimize_the_added_water_and_ions_
+
+Title: First minimization of solvent 
+Changes to be made: 
+ - residues to be restrained (restraintmask, select all ligands, proteins and atoms) 
+ - residue restraint weight (restraint_wt, keep default as if not sure what it needs to be)
+ - cut-off (cut) maximum is 10 unless a very small system like a single peptide.
+
+Comments:
+
+Command:
+
+  &cntrl
+  imin = 1, maxcyc = 10000000, drms=1e-3,   
+  ncyc = 2500, ntx = 1,                     
+  ntwe = 0, ntwr = 1000, ntpr = 100,
+   ntb = 1, ntp = 0,
+  cut = 10.0,   
+  ntr=1, restraintmask = ':1-401&(!@H=)', ! restrain solutes except their hydrogens
+  restraint_wt = 5.0,
+  ioutfm=1, ntxo=2,
+ /

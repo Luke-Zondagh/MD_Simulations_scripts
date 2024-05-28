@@ -1,0 +1,44 @@
+Look at tutorial 3.1 in Amber-Tutorial website. https://ambermd.org/tutorials/basic/tutorial13/index.php#Minimize_the_added_water_and_ions_
+
+Title: Heating of the system in increments and from 0K (some do not reccomend)
+
+Changes to be made:
+ - residues to be restrained (restraintmask, select all ligands, proteins and atoms)
+       - can use residue and ligand number but need to have : first i.e. ':1-532' or ':Ala' or ':WAT'
+       - can use syntax i.e. @CA,C,N (backbone), WAT (water), ligand code or ! to restarin everything except anything after !. i.e. '@CA,C,N or '!@H=&:WAT,Cl-,Na+'
+       - Need to put between apostrophes.
+       - Different ways to choose atoms, residues, ligands syntax at following website:
+         https://parmed.github.io/ParmEd/html/amber.html
+ - residue restraint weight (restraint_wt, keep default as if not sure what it needs to be)
+ - cut-off (cut) maximum is 8 unless a very small system like a single peptide.
+ - change imin to 0 as we are not minimizing the system
+
+Comments: 
+- Don't start temperature at 0 as this will take a long time to heat and make the system unstable
+- The tempo section at the end ensures slow heating to system to stop it from blowing up.
+- ig flag is a random seed number when set to -1
+- ntf needs to be 2 if ntc is 2. ntc 2 uses SHAKE
+- gamma_ln represent the collision frequencyof the Langevin dynamics thermostat
+- nmropt=1 tells the system to ramp heat up slowly.nmropt must = 1 for the &wt to employed
+
+Command:
+
+&cntrl
+  imin = 0, nstlim = 50000, dt = 0.001, ! 50 ps
+  irest = 0, ntx = 1, ig = -1,
+  tempi = 10.0, temp0 = 10.0,
+  ntc = 2, ntf = 2, tol = 0.00001,
+  ntwx = 100, ntwe = 0, ntwr = 100, ntpr = 100,
+  cut = 8.0, iwrap = 0,
+  ntt =3, gamma_ln=1.0, ntb = 2, ntp = 1,
+  nscm = 0,
+  ntr=1, restraintmask=':1-401 & !@H=', restraint_wt=100.0,
+  ioutfm=1, ntxo=2,
+ /
+
+
+
+
+
+
+

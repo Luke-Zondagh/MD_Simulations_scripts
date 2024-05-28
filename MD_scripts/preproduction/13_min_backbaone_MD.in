@@ -1,0 +1,28 @@
+Look at tutorial 3.1 in Amber-Tutorial website. https://ambermd.org/tutorials/basic/tutorial13/index.php#Minimize_the_added_water_and_ions_
+
+Title: Minimizing system with only backbone restraints
+
+Changes to be made:
+ - residues to be restrained (restraintmask, select all ligands, proteins and atoms)
+ - residue restraint weight (restraint_wt, keep default as if not sure what it needs to be)
+ - cut-off (cut) maximum is 8 unless a very small system like a single peptide.
+ - change imin to 1 as we are minimizing the system
+ - same restraints on restraintmask choices using restraint_wt = 10 kcal/mol
+ - Only restraining backbone with @CA, N, C 
+Comments:
+
+Command:
+
+&cntrl
+  imin = 1, maxcyc = 5000,
+  ncyc = 2500, ntx = 1, 
+  ntwe = 0, ntwr = 100, ntpr = 10,
+  ntb = 1, ntp = 0,
+  cut = 8.0,   
+  ntr=1, restraintmask=":1-401@CA,N,C", restraint_wt=10.0, ! Need to add residue and ligand numbers
+  ioutfm=1, ntxo=2,
+ /
+
+
+
+

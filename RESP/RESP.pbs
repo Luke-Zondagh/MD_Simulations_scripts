@@ -1,0 +1,131 @@
+#!/bin/bash
+#PBS -P CBBI1154
+#PBS -N Gaussian_prep 
+#PBS -l select=1:ncpus=24:mpiprocs=24:mem=120gb
+#PBS -l walltime=5:00:00
+#PBS -q smp
+#PBS -M lzondagh@uwc.ac.za
+#PBS -m abe
+#PBS -o /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/Ligands_RESP/RESP_output
+#PBS -e /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/Ligands_RESP/RESP_error
+
+module purge
+
+pushd /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/Ligands_RESP
+
+ls Gaussian_input/* > gaussian.input
+sed -i 's/Gaussian_input\///g' gaussian.input
+sed -i 's/.g//g' gaussian.input
+
+mkdir -p tleap/dry_files/
+mkdir -p tleap/files_4_MD/
+
+while read line
+do
+
+echo "Modifying gaussain input file"
+
+head -n 6 Templates_files/lig_OPT.gjf > temp.gjf
+tail -n +5 Gaussian_input/${line}.g >> temp.gjf
+mv temp.gjf Gaussian_modified_input/${line}_Opt.gjf
+sed -i "s/LIG/${line}/g" Gaussian_modified_input/${line}_Opt.gjf 
+
+head -n 6 Templates_files/lig_SP.gjf > temp.gjf
+tail -n +5 Gaussian_input/${line}.g >> temp.gjf
+mv temp.gjf Gaussian_modified_input/${line}_SP.gjf
+sed -i "s/LIG/${line}/g" Gaussian_modified_input/${line}_SP.gjf
+
+echo "Starting compound ${line} QM calculation"
+
+function cleanup_scratch() {
+echo "Deleting inside signal handler, meaning I probably either hit the walltime, or deleted the job using qdel"
+
+rm -rfv $GAUSS_SCRDIR
+echo "---"
+echo "Signal handler ending time:"
+date
+exit 0
+}
+
+trap 'cleanup_scratch' SIGTERM SIGHUP SIGINT SIGQUIT SIGFPE SIGKILL SIGALRM
+
+mkdir -p /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/Ligands_RESP/$PBS_JOBID
+
+echo "Job starts here"
+date
+
+module add chpc/gaussian16/C01
+
+GAUSS_SCRDIR=/mnt/lustre/users/lzondagh/BACE_1/MD_simulations/Ligands_RESP/$PBS_JOBID
+
+export g16root GAUSS_SCRDIR GAUSS_EXEDIR
+source $g16root/g16/bsd/g16.profile
+export GAUSS_EXEDIR=$g16root/g16/linda-exe:$GAUSS_EXEDIR
+
+LINDA=`cat $PBS_NODEFILE | uniq | tr '\n' , | sed 's|,$||'`
+sed -i 's/.*linda.*/\%lindaworkers='$LINDA'/' Gaussian_modified_input/${line}_Opt.gjf
+sed -i 's/.*linda.*/\%lindaworkers='$LINDA'/' Gaussian_modified_input/${line}_SP.gjf
+g16 < Gaussian_modified_input/${line}_Opt.gjf > Results/${line}_Opt.log
+g16 < Gaussian_modified_input/${line}_SP.gjf > Results/${line}_SP.log
+
+mv ${line}_Opt.chk Results/
+
+echo "rm -rfv $GAUSS_SCRDIR"
+rm -rf $PBS_JOBID;
+
+echo "Calcualtion execution ending time:"
+date
+
+echo "Ending compound ${line} QM calculation"
+
+module purge
+module add chpc/schrodinger/2023-2
+
+echo "Converting ${line} to mol2" 
+${SCHRODINGER}/utilities/structconvert docked_ligands/${line}.maegz mol2/${line}.mol2
+
+module purge
+module add chpc/amber/20/mpich-3.4.1/gcc-6.1.0 
+source $AMBERHOME/amber.sh
+
+echo "Start RESP fit of ligand ${line}"
+
+exe=$AMBERHOME/bin/antechamber
+$exe -fi gout -fo ac -i Results/${line}_SP.log -o AMBER/${line}_AC.ac -c resp -at gaff2
+$exe -fi ac -i AMBER/${line}_AC.ac -c wc -cf AMBER/${line}_CHARGE.crg -o AMBER/${line}_charge.mol2 -fo mol2 -at gaff2
+$exe -fi mol2 -fo mol2 -i mol2/${line}.mol2 -o RESP/${line}_RESP.mol2 -c rc -cf AMBER/${line}_CHARGE.crg -at gaff2 -nc 1 -rn ${line}
+$AMBERHOME/bin/parmchk2 -i RESP/${line}_RESP.mol2 -f mol2 -o RESP/${line}_RESP.frcmod
+
+rm A*
+rm QOUT
+rm qout
+rm punch
+rm esout
+
+echo  "RESP fit of ligand ${line} completed"
+
+echo  "tleap of ligand ${line} sarting"
+
+cd tleap/
+
+mkdir dry_files/${line}_dry/
+mkdir files_4_MD/${line}_MD/
+
+sed -i "s/LIG/${line}/g" tleap_save.in
+
+$AMBERHOME/bin/tleap -s -f tleap_save.in
+
+sed -i "s/${line}/LIG/g" tleap_save.in
+
+mv dry_files/rec_dry* dry_files/${line}_dry/
+mv dry_files/complex_dry* dry_files/${line}_dry/
+mv dry_files/lig_dry* dry_files/${line}_dry/
+mv files_4_MD/complex_solvated* files_4_MD/${line}_MD/
+
+cd ../
+
+echo "tleap of ligand ${line} completed"
+
+done < gaussian.input
+
+popd

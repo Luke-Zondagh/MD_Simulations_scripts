@@ -1,0 +1,22 @@
+#!/bin/bash
+#PBS -P CBBI1154
+#PBS -N R3Production
+#PBS -l select=1:ncpus=6:ngpus=1
+#PBS -l walltime=1:00:00
+#PBS -q gpu_1
+#PBS -m abe
+#PBS -M lzondagh@uwc.ac.za
+#PBS -o /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/production/19_production_MD_r3_output
+#PBS -e /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/production/19_production_MD_r3_error
+#PBS
+
+module purge
+module add chpc/amber/20/cuda11.2/mpich-3.4.1/gcc-6.1.0
+source $AMBERHOME/amber.sh
+
+pushd /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/production
+exe=$AMBERHOME/bin/pmemd.cuda
+
+$exe -O -i 19_production_MD.in -o 19_production_MD_r3.out -p ../complex_solvated.parm7 -c 19_production_MD_r2.rst7 -r 19_production_MD_r3.rst7 -ref 19_production_MD_r2.rst7 -inf ../MD_info/19_production_MD_run_3.info -x 19_production_MD_trj_r3.nc
+
+popd

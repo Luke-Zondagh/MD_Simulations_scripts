@@ -1,0 +1,22 @@
+#!/bin/bash
+#PBS -P CBBI1154
+#PBS -N pre-prep
+#PBS -l select=1:ncpus=2:ngpus=1
+#PBS -l walltime=0:30:00
+#PBS -q gpu_1
+#PBS -m abe
+#PBS -M lzondagh@uwc.ac.za
+#PBS -r n
+#PBS -o /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction/10_heating_100K_MD_output
+#PBS -e /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction/10_heating_100K_MD_error
+#PBS
+
+module purge
+module add chpc/amber/20/cuda11.2/mpich-3.4.1/gcc-6.1.0
+source $AMBERHOME/amber.sh
+
+pushd /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction/
+exe=$AMBERHOME/bin/pmemd.cuda
+
+$exe -O -i 10_heating_100K_MD.in -o 10_heating_100K_MD.out -p ../complex_solvated.parm7 -c 9_min.rst7 -r 10_heating_100K_MD.rst7 -ref 9_min.rst7 -inf ../MD_info/10_heating_100K_MD.info -x 10_heating_100K_MD_trj.nc
+popd

@@ -1,0 +1,24 @@
+Input file for running GB, PB and nmode etropy contirbution
+PBSA, decomp and nmode takes longer. Increase time required and reduce number of frames
+using 32 frame intervals to acquire 250 frames analysed
+
+Need to write out mdin files and add use_sav=0 to PB mdin files. When usig inp=1 this need to be done.
+
+&general
+ startframe=1, endframe=50000, interval=25, keep_files=1, strip_mask=":WAT,Na+,Cl-", 
+ receptor_mask=":1-400", ligand_mask=":401", netcdf=1, use_sander=1, 
+/
+&gb
+igb=8, saltcon=0.150,
+/
+&pb
+istrng=0.150, radiopt=0, inp=1,  
+/
+#&nmode
+#nmstartframe=1, nmendframe=20, nminterval=2,
+#nmode_igb=1, nmode_istrng=0.150,
+/
+#&decomp
+#idecomp=1, print_res="542;70;72;84;122;280-282;284-285;287;290;295;297;335;336;339",
+#dec_verbose=2,csv_format=0,
+#/

@@ -1,0 +1,21 @@
+#!/bin/bash
+#PBS -P CBBI1154
+#PBS -N 2_equil
+#PBS -l select=1:ncpus=2:ngpus=1
+#PBS -l walltime=0:10:00
+#PBS -q gpu_1
+#PBS -m abe
+#PBS -M lzondagh@uwc.ac.za
+#PBS -o /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction/2_equilibration_10K_MD_output
+#PBS -e /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction/2_equilibration_10K_MD_error
+#PBS
+
+module purge
+module add chpc/amber/20/cuda11.2/mpich-3.4.1/gcc-6.1.0
+source $AMBERHOME/amber.sh
+
+pushd /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction/
+exe=$AMBERHOME/bin/pmemd.cuda
+
+$exe -O -i 2_equilibration_10K_MD.in -o 2_equilibration_10K_MD.out -p ../complex_solvated.parm7 -c 1_min_h_restrnt_MD.rst7 -r 2_equilibration_10K_MD.rst7 -ref 1_min_h_restrnt_MD.rst7 -inf ../MD_info/2_equilibration_10K_MD.info -x 2_equilibration_10K_MD_trj.nc
+popd

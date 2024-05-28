@@ -1,0 +1,37 @@
+Look at tutorial 3.1 in Amber-Tutorial website. https://ambermd.org/tutorials/basic/tutorial13/index.php#Minimize_the_added_water_and_ions_
+
+Title: Relaxing of the system with backbone restrained at 298K under constant pressure over 1 nansecond
+
+Changes to be made:
+ - residues to be restrained (restraintmask, select all ligands, proteins and atoms)
+ - residue restraint weight (restraint_wt, keep default as if not sure what it needs to be)
+ - cut-off (cut) maximum is 8 unless a very small system like a single peptide.
+ - change imin to 0 as we are not minimizing the system
+ - same restraints on restraintmask choices using restraint_wt 10 kcal/mol
+ - Only restraining backbone with @CA, N, C
+ - Different ways to choose atoms, residues, ligands syntax at following website:
+   https://parmed.github.io/ParmEd/html/amber.html
+
+Comments:
+ - ig flag is a random seed number when set to -1
+ - ntf needs to be 2 if ntc is 2. ntc 2 uses SHAKE
+ - gamma_ln represent the collision frequencyof the Langevin dynamics thermostat
+
+Command:
+
+&cntrl
+  imin = 0, nstlim = 1000000, dt = 0.001, ! 1 ns
+  irest = 0, ntx = 1, ig = -1,
+  tempi = 298.0, temp0 = 298.0,
+  ntc = 2, ntf = 2, tol = 0.00001,
+  ntwx = 10000, ntwe = 0, ntwr = 100, ntpr = 100,
+  cut = 8.0, iwrap = 0,
+  ntt =3, gamma_ln=1.0, ntb = 2, ntp = 1, 
+  nscm = 0, barostat = 2,
+  ntr=1, restraintmask=":1-401@CA,N,C", restraint_wt=10.0, ! add ligand and residue numbers
+  ioutfm=1, ntxo=2,
+ /
+
+
+
+

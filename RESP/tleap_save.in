@@ -1,0 +1,106 @@
+## ** Amber tleap input file
+
+## ** read in protein forcefield
+source leaprc.protein.ff14SB
+#source leaprc.protein.ff19SB
+
+## ** read in ligand forcefield
+source leaprc.gaff2
+
+## ** read in water model (.spce, .tip3p, .opc)
+source leaprc.water.tip3p #with ff14SB = best results
+#source leaprc.water.opc #with ff19SB = best results
+
+## ** Loading ion parameter files for specified solvent model
+loadamberparams frcmod.ionsjc_tip3p
+#loadamberpaprams frcmod.ionslm_126_opc
+loadoff atomic_ions.lib
+
+## ** set Radii set to mbondi3. Gives better accuracy in MM-PBSA and -GBSA calculations. \
+## ** Use igb=8 in MM-PBSA
+set default PBradii mbondi3
+
+## ** load ligand (add name of ligand between quotes)
+lig=loadmol2 "../RESP/LIG_RESP.mol2"
+
+## ** Add extra information from the prmchk2
+loadamberparams ../RESP/LIG_RESP.frcmod
+loadamberparams frcmod.ionsjc_tip3p
+check lig
+
+## ** load receptor (add name of protein between quotes)
+rec=loadpdb "rec.pdb"
+
+## ** Form sulfide bonds between CYX residues add as many pairs as necessary
+## ** numbers of sulfide bridge residues can be found from rec_sslink file from pdb4amber command
+bond rec.157.SG rec.361.SG
+bond rec.219.SG rec.384.SG
+bond rec.271.SG rec.321.SG
+
+## ** Make a complex between ligand and receptor
+complex=combine {rec lig}
+
+## ** Save lig, rec and complex in gas for MMPBSA calculation
+## ** Use ambpdb -p protein/complex/lig.parm7 -c protein/complex/lig.nc > protein/complex/lig.pdb \
+##    as this saves pdb with all required pdb information. Use for visulization etc. 
+
+## ** save lig topology and coordinate file
+saveAmberParm lig dry_files/lig_dry.parm7 dry_files/lig_dry.rst7
+savepdb lig dry_files/lig_dry.pdb
+
+## ** Save protein/complex as a pdb, its parameters and input coordinates without \
+##    solvent for the dry protein
+saveamberparm complex dry_files/complex_dry.parm7 dry_files/complex_dry.rst7
+
+## ** Save complex as pdb 
+savepdb complex dry_files/complex_dry.pdb
+
+## ** Save rec that is not solvated as well (don't ever comment off even if working with a complex)
+saveAmberParm rec dry_files/rec_dry.parm7 dry_files/rec_dry.rst7
+
+## ** Save rec as pdb (don't ever comment off even if working with a complex)
+savepdb rec dry_files/rec_dry.pdb
+
+## ** Determine charge of rec or complex.
+charge complex
+
+## ** Add ions to system. can either add specific amount of use 0 for tleap to decide for itself \
+## need to double check if charge outputed and ions added is the correct
+## ** Use addions2 as it is a better method for drug discovery MD's
+
+addions2 complex Na+ 0
+addions2 complex Cl- 0
+
+## ** Ensure charge is 0
+charge complex
+
+## ** Solvate the system. Needs to align to water model loaded (SPCBOX, TIP3PBOX, etc.)
+## ** If using complex then need to add complex in place for rec
+## ** Octahedral is most space with lowest computation effort
+## ** 10.0 = box edge distance away from protein
+solvateOct complex TIP3PBOX 10.0
+
+## ** Add ions to system to obtain 0.15 salt concentration using SLTCAP web server. 
+## ** addIonsRand randomly replaces water molecules with ions.
+## ** Read own Amber_MD_Guide for SLTCAP instructions
+addIonsRand complex Na+ 23 Cl- 23
+
+## ** Check system of rec or complex
+charge complex 
+check complex
+
+## ** Save amber files for receptor (don't ever comment off even if working with a complex)
+#saveAmberParm rec files_4_MD/rec_solvated.parm7 files_4_MD/rec_solvated.rst7
+
+# ** Save rec_solvated as pdb (don't ever comment off even if working with a complex)
+#savepdb rec files_4_MD/rec_solvated.pdb
+
+## ** Save amber files for complex  
+saveAmberParm complex files_4_MD/complex_solvated.parm7 files_4_MD/complex_solvated.rst7
+
+## ** Save complex as a pdb
+savepdb complex files_4_MD/complex_solvated.pdb
+
+quit
+
+

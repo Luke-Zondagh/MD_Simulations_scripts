@@ -1,0 +1,23 @@
+#!/bin/bash
+#PBS -P CBBI1154
+#PBS -N 1_min
+#PBS -l select=1:ncpus=24:mpiprocs=24
+#PBS -l walltime=0:30:00
+#PBS -q smp
+#PBS -m be
+#PBS -M lzondagh@uwc.ac.za
+#PBS -r n
+#PBS -o /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction/1_min_MD_output
+#PBS -e /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction/1_min_MD_error
+
+
+module purge
+module add chpc/amber/20/mpich-3.4.1/gcc-6.1.0
+source $AMBERHOME/amber.sh
+
+pushd /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction
+exe=$AMBERHOME/bin/pmemd.MPI
+
+mpirun -np 24 $exe -O -i 1_min_h_restrnt_MD.in -o 1_min_h_restrnt_MD.out -p ../complex_solvated.parm7 -c ../complex_solvated.rst7 -r 1_min_h_restrnt_MD.rst7 -inf ../MD_info/1_min_MD.info -ref ../complex_solvated.rst7
+
+popd

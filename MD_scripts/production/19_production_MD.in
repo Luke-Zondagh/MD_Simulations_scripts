@@ -1,0 +1,25 @@
+Look at bookmarks for AMBER on Safari. Links added to Amber_MD_gide
+
+Title: Production run over 10 nanosecond
+
+Changes to be made:
+ - cut-off (cut) maximum is 8 unless a very small system like a single peptide.
+
+Comments:
+ - ig flag is a random seed number when set to -1
+ - ntf needs to be 2 if ntc is 2. ntc 2 uses SHAKE
+ - gamma_ln represent the collision frequencyof the Langevin dynamics thermostat
+
+Command:
+ 
+&cntrl   
+  imin = 0, nstlim = 5000000, dt = 0.002, ! 10 ns
+  irest = 1, ntx = 5, ig = -1,
+  temp0 = 298.0,
+  ntc = 2, ntf = 2, tol = 0.00001,
+  ntwx = 500, ntwe = 0, ntwr = 500, ntpr = 500,
+  cut = 8.0, iwrap = 0,
+  ntt =3, gamma_ln=1.0, ntb = 2, ntp = 1,
+  nscm = 1000, barostat = 2,
+  ioutfm=1, ntxo=2,
+ /

@@ -1,0 +1,17 @@
+#!/bin/bash/
+
+#Read in topology
+parm com_Dry.*.parm7 [traj_parm]
+
+
+#Read in dry trajectory
+trajin com_Dry.nc 1 last 1 parm [traj_parm] #read every frame
+
+#Calculate backbone rmsd of frame first to last frame
+rmsd r_bb first ":25-370&@C,CA,N" nofit mass
+
+#RMS fluctuations of ligand heavy atoms
+atomicfluct ":401&!(@H=)" out lig_rmsf_byatom.dat byatom
+
+
+

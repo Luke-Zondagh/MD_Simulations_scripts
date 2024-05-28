@@ -1,0 +1,37 @@
+#!/bin/bash
+#PBS -P CBBI1154
+#PBS -N analysis
+#PBS -l select=1:ncpus=24:mpiprocs=12:mem=120gb
+#PBS -l walltime=0:30:00
+#PBS -q smp
+#PBS -m abe
+#PBS -M lzondagh@uwc.ac.za
+#PBS -o /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/production/analysis/cpptraj_analysis_output
+#PBS -e /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/production/analysis/cpptraj_analysis_error
+#PBS
+
+module purge
+module add chpc/amber/20/mpich-3.4.1/gcc-6.1.0
+#nedcdf library required to run cpptraj.MPI
+module add chpc/earth/netcdf/4.7.4/gcc-8.3.0
+source $AMBERHOME/amber.sh
+
+pushd /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/production/analysis
+exe=$AMBERHOME/bin/cpptraj.MPI
+
+#Combine all trajectories
+#$AMBERHOME/bin/cpptraj -i analysis_scripts/combine_strip.in
+mpirun -np 24 $exe -i analysis_scripts/combine_strip.in
+mpirun -np 24 $exe -i analysis_scripts/combine_strip_10.in
+
+#Make a reference of last preparation step output
+$AMBERHOME/bin/cpptraj -i analysis_scripts/rst_strip.in
+$AMBERHOME/bin/cpptraj -i analysis_scripts/rst_strip_10.in
+
+#Run CPPTRAJ analysis
+#$AMBERHOME/bin/cpptraj. -i analysis_scripts/calc_RMSD_RMSF.in 
+mpirun -np 24 $exe -i analysis_scripts/calc_RMSD_RMSF.in
+#$AMBERHOME/bin/cpptraj -i analysis_scripts/h_bonds.in
+mpirun -np 24 $exe -i analysis_scripts/h_bonds.in
+
+popd

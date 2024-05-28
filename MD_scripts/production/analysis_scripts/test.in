@@ -1,0 +1,55 @@
+#!/bin/bash/
+
+#Read in topology
+parm com_Dry.*.parm7 [traj_parm]
+parm rst*.parm7 [ref_parm]
+
+#Read in dry trajectory
+trajin com_Dry.nc 1 last 1 parm [traj_parm] #read every frame
+
+#Read in reference
+reference rst_stripped.rst7 parm [ref_parm]
+
+#Calculate backbone rmsd of frame first to last frame
+rmsd r_bb first ":25-370@CA" nofit mass out rmsd_bb.dat time 0.001 #time = frame is eqilivant to 2 picoseconds
+
+#Create a normalised ditribution histogram plot
+hist r_bb norm min 0 max 6 bins 30 out rmsd_bb.hist
+
+#Calculate active site rmsd first to last frame
+rmsd r_active first ":34,37,73,75,78,110,117,230,233" nofit mass out rmsd_active.dat time 0.001
+ 
+#Create a normalised ditribution histogram plot
+hist r_active norm min 0 max 6 bins 30 out rmsd_active.hist
+
+#Calculate ligand rmsd first to last frame
+rmsd r_ligand first ":401&!(@H=)" nofit  mass out rmsd_lig.dat time 0.001
+
+#Create a normalised ditribution histogram plot
+hist r_ligand norm min 0 max 9 bins 30 out rmsd_lig.hist
+
+#Calculate backbone rmsd of reference to last frame
+rmsd ref_bb reference ":25-370@CA" mass out rmsd_bb_ref.dat time 0.001
+
+#Create a normalised ditribution histogram plot
+hist ref_bb norm min 0 max 6 bins 30 out rmsd_bb_ref.hist
+
+#Calculate active site backbone rmsd reference to last frame
+rmsd ref_active reference ":34,37,73,75,78,110,117,230,233" mass out rmsd_active_ref.dat time 0.001
+ 
+#Create a normalised ditribution histogram plot
+hist ref_active norm min 0 max 6 bins 30 out rmsd_active_ref.hist
+
+#Calculate ligand rmsd reference to last frame
+rmsd ref_ligand reference ":401&!(@H=)" mass out rmsd_lig_ref.dat time 0.001
+
+#Create a normalised ditribution histogram plot
+hist ref_ligand norm min 0 max 6 bins 30 out rmsd_lig_ref.hist
+
+#RMS fluctuations of backbone
+atomicfluct ":25-370@CA" out rmsf_byres.dat byres
+
+#Radius of gyration of protein and ligand using mass weighted raduis of gyration
+radgyr ":25-370&!(@H=)" out RoG_protein.dat mass nomax
+
+go

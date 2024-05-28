@@ -1,0 +1,36 @@
+#!/bin/bash
+#PBS -P CBBI1154
+#PBS -N MM-PBSA
+#PBS -l select=1:ncpus=4:mpiprocs=4:mem=120gb
+#PBS -l walltime=80:00:00
+#PBS -q seriallong
+#PBS -m be
+#PBS -M lzondagh@uwc.ac.za
+#PBS -r n
+#PBS -o /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/MM-PBSA/mmpbsa_output
+#PBS -e /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/MM-PBSA/mmpbsa_error 
+
+module purge
+module add chpc/amber/20/mpich-3.4.1/gcc-6.1.0
+module add chpc/earth/netcdf/4.7.4/gcc-8.3.0 # To be able to read NetCDF files in parallel
+source $AMBERHOME/amber.sh
+
+pushd /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/MM-PBSA/
+
+#Remove periodic box of MD smulation and saving trajectory into MM-PBSA directory
+$AMBERHOME/bin/cpptraj.MPI -i MMPBSA_scripts/cpptraj_MMPBSA.in
+
+## Make required parameter files 
+## -n is the ligand number.
+$AMBERHOME/bin/ante-MMPBSA.py -p ../complex_solvated.parm7 -c complex_dry.parm7 -r rec_dry.parm7 -l lig_dry.parm7 -s ':Na+,Cl-,WAT' -n ':401' --radii=mbondi3
+
+##Make executable variable for MMPBSA calculations.
+exe=$AMBERHOME/bin/MMPBSA.py
+
+## Comamnd to run MM(G)PBSA calculation using altered mdins
+$exe -O -i MMPBSA_scripts/mmPbsa.in -o Out_mmpbsa.dat -sp ../complex_solvated.parm7 -cp complex_dry.parm7 -rp rec_dry.parm7 -lp lig_dry.parm7 -y mmpbsa.nc > mmPbsa_run.log2
+
+# Calculate the entropy and output the entropy and delta binding free energy
+python MMPBSA_scripts/calculate_entropy.py
+
+popd

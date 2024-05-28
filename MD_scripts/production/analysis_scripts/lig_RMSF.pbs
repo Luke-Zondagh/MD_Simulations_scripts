@@ -1,0 +1,24 @@
+#!/bin/bash
+#PBS -P CBBI1154
+#PBS -N analysis
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=120gb
+#PBS -l walltime=0:10:00
+#PBS -q serial
+#PBS -m abe
+#PBS -M lzondagh@uwc.ac.za
+#PBS -o /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/production/analysis/cpptraj_analysis_lig_rmsf_output
+#PBS -e /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/production/analysis/cpptraj_analysis_lig_rmsf_error
+#PBS
+
+module purge
+module add chpc/amber/20/mpich-3.4.3/gcc-9.2.0
+#nedcdf library required to run cpptraj.MPI
+module add chpc/earth/netcdf/4.7.4/gcc-8.3.0
+source $AMBERHOME/amber.sh
+
+pushd /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/production/analysis
+exe=$AMBERHOME/bin/cpptraj.MPI
+
+mpirun -np 12 $exe -i analysis_scripts/lig_RMSF.in
+
+popd

@@ -1,0 +1,36 @@
+#!/bin/bash
+#PBS -P CBBI1154
+#PBS -N pre-prep
+#PBS -l select=1:ncpus=2:ngpus=1
+#PBS -l walltime=2:00:00
+#PBS -q gpu_1
+#PBS -m abe
+#PBS -M lzondagh@uwc.ac.za
+#PBS -o /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction/11_18MD_output
+#PBS -e /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction/11_18_MD_error
+#PBS
+
+module purge
+module add chpc/amber/20/cuda11.2/mpich-3.4.1/gcc-6.1.0
+source $AMBERHOME/amber.sh
+
+pushd /mnt/lustre/users/lzondagh/BACE_1/MD_simulations/LIG/preproduction
+exe=$AMBERHOME/bin/pmemd.cuda
+
+$exe -O -i 11_relax_MD.in -o 11_relax_MD.out -p ../complex_solvated.parm7 -c 10_heating_100K_MD.rst7 -r 11_relax_MD.rst7 -ref 10_heating_100K_MD.rst7 -inf ../MD_info/11_relax_MD.info -x 11_relax_MD_trj.nc
+
+$exe -O -i 12_lwr_restrnt_MD.in -o 12_lwr_restrnt_MD.out -p ../complex_solvated.parm7 -c 11_relax_MD.rst7 -r 12_lwr_restrnt_MD.rst7 -ref 11_relax_MD.rst7 -inf ../MD_info/12_lwr_restrnt_MD.info -x 12_lwr_restrnt_MD_trj.nc
+
+$exe -O -i 13_min_backbaone_MD.in -o 13_min_backbaone_MD.out -p ../complex_solvated.parm7 -c 12_lwr_restrnt_MD.rst7 -r 13_min_backbaone_MD.rst7 -ref 12_lwr_restrnt_MD.rst7 -inf ../MD_info/13_min_backbaone_MD.info -x 13_min_backbaone_MD_trj.nc
+
+$exe -O -i 14_relax_backbone_MD.in -o 14_relax_backbone_MD.out -p ../complex_solvated.parm7 -c 13_min_backbaone_MD.rst7 -r 14_relax_backbone_MD.rst7 -ref 13_min_backbaone_MD.rst7 -inf ../MD_info/14_relax_backbone_MD.info -x 14_relax_backbone_MD_trj.nc
+
+$exe -O -i 15_lwr_backbone_restrnt_MD.in -o 15_lwr_backbone_restrnt_MD.out -p ../complex_solvated.parm7 -c 14_relax_backbone_MD.rst7 -r 15_lwr_backbone_restrnt_MD.rst7 -ref 14_relax_backbone_MD.rst7 -inf ../MD_info/15_lwr_backbone_restrnt_MD.info -x 15_lwr_backbone_restrnt_MD_trj.nc
+
+$exe -O -i 16_lwr_babckbone_restrnt_2_MD.in -o 16_lwr_babckbone_restrnt_2_MD.out -p ../complex_solvated.parm7 -c 15_lwr_backbone_restrnt_MD.rst7 -r 16_lwr_babckbone_restrnt_2_MD.rst7 -ref 15_lwr_backbone_restrnt_MD.rst7 -inf ../MD_info/16_lwr_babckbone_restrnt_2_MD.info -x 16_lwr_babckbone_restrnt_2_MD_trj.nc
+
+$exe -O -i 17_remvove_lig_restrnts.in -o 17_remvove_lig_restrnts.out -p ../complex_solvated.parm7 -c 16_lwr_babckbone_restrnt_2_MD.rst7 -r 17_remvove_lig_restrnts.rst7 -ref 16_lwr_babckbone_restrnt_2_MD.rst7 -inf ../MD_info/17_remvove_lig_restrnts.info -x 17_remvove_lig_restrnts_trj.nc
+
+$exe -O -i 18_no_restrnts_MD.in -o 18_no_restrnts_MD.out -p ../complex_solvated.parm7 -c 17_remvove_lig_restrnts.rst7 -r 18_no_restrnts_MD.rst7 -ref 17_remvove_lig_restrnts.rst7 -inf ../MD_info/18_no_restrnts_MD.info -x 18_no_restrnts_MD_trj.nc
+
+popd

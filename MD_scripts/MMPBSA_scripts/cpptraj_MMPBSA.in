@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#Read in topology file
+parm ../complex_solvated.parm7
+
+#Read in trajectories
+trajin ../production/*MD_trj_r6.nc 1 last 1 #first to last frame and read every frame. Frames 50 - 100 ns 
+trajin ../production/*MD_trj_r7.nc 1 last 1
+trajin ../production/*MD_trj_r8.nc 1 last 1
+trajin ../production/*MD_trj_r9.nc 1 last 1
+trajin ../production/*MD_trj_r10.nc 1 last 1
+
+#Centers molecular systems of all trajectories
+autoimage
+
+#remove global rotational and translation motion
+rms fit :1-401
+
+#write out combined and stripped trajectory file 
+trajout mmpbsa.nc nobox
+
+go
